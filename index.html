@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="Biblioteca de prompts del proceso de Data Processing"
+  />
+
+  <meta name="theme-color" content="#4c1d95" />
+
+  <title>Repositorio de Prompts DP</title>
+
+  <!-- Renderizador Markdown compatible con GitHub Flavored Markdown -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+    defer
+  ></script>
+
+  <!-- Sanitización del HTML generado por Markdown -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"
+    defer
+  ></script>
+
+  <style>
+    :root {
+      --violet: #4c1d95;
+      --blue: #1e3a8a;
+      --orange: #ea580c;
+
+      --glass: rgba(255, 255, 255, 0.12);
+      --line: rgba(255, 255, 255, 0.22);
+
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.78);
+
+      --doc-text: #303030;
+      --doc-border: #dcdcde;
+      --doc-bg: #ffffff;
+      --doc-soft: #f8f8f8;
+      --doc-link: #1068bf;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        linear-gradient(
+          135deg,
+          var(--violet),
+          var(--blue),
+          var(--orange)
+        );
+      background-attachment: fixed;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button,
+    a {
+      outline-offset: 3px;
+    }
+
+    /* =========================================================
+       ENCABEZADO
+       ========================================================= */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header-inner {
+      max-width: 1300px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .brand h1 {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+    }
+
+    .brand p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .search {
+      width: min(100%, 380px);
+      padding: 12px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.13);
+      color: #ffffff;
+    }
+
+    .search::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search:focus {
+      outline: 2px solid rgba(255, 255, 255, 0.75);
+      border-color: transparent;
+    }
+
+    /* =========================================================
+       CONTENIDO PRINCIPAL
+       ========================================================= */
+
+    main {
+      max-width: 1300px;
+      margin: auto;
+      padding: 26px 20px 45px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 21px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 0.93rem;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+    }
+
+    .legend span {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+    }
+
+    /* =========================================================
+       TARJETAS
+       ========================================================= */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      min-height: 270px;
+      border-radius: 18px;
+      background: var(--glass);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+      transition:
+        0.25s transform,
+        0.25s box-shadow;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
+    }
+
+    .card-head {
+      height: 7px;
+      background:
+        linear-gradient(
+          90deg,
+          #8b5cf6,
+          #3b82f6,
+          #f97316
+        );
+    }
+
+    .card-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .stage {
+      margin-bottom: 8px;
+      color: #fed7aa;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .title {
+      margin-bottom: 10px;
+      font-size: 1.12rem;
+      font-weight: 800;
+    }
+
+    .summary {
+      flex: 1;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .path {
+      margin: 14px 0 12px;
+      color: rgba(255, 255, 255, 0.58);
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+      font-size: 0.73rem;
+      word-break: break-all;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      color: #ffffff;
+      transition: 0.2s;
+      background:
+        linear-gradient(
+          90deg,
+          #7c3aed,
+          #3b82f6,
+          #f97316
+        );
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid var(--line);
+    }
+
+    .btn:hover {
+      transform: scale(1.025);
+      filter: brightness(1.08);
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 40px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 18px;
+    }
+
+    /* =========================================================
+       CARGA
+       ========================================================= */
+
+    .skeleton .summary {
+      height: 94px;
+      border-radius: 10px;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.18),
+          rgba(255, 255, 255, 0.08)
+        );
+      background-size: 200% 100%;
+      animation: load 1.25s infinite;
+    }
+
+    @keyframes load {
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    /* =========================================================
+       MODAL
+       ========================================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.72);
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .dialog {
+      width: min(1100px, 100%);
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--doc-bg);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 14px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+    }
+
+    .dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      color: #1f1f1f;
+      background: #fafafa;
+      border-bottom: 1px solid var(--doc-border);
+    }
+
+    .dialog-head h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .close {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 8px;
+      color: #303030;
+      background: #eaeaea;
+      cursor: pointer;
+      font-size: 1.35rem;
+    }
+
+    .close:hover {
+      background: #dcdcde;
+    }
+
+    .close:focus-visible {
+      outline: 3px solid #7c3aed;
+    }
+
+    /* =========================================================
+       CONTENIDO MARKDOWN
+       ========================================================= */
+
+    .dialog-content {
+      padding: 32px 40px;
+      overflow: auto;
+      color: var(--doc-text);
+      background: var(--doc-bg);
+      line-height: 1.6;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .dialog-content h1,
+    .dialog-content h2,
+    .dialog-content h3,
+    .dialog-content h4,
+    .dialog-content h5,
+    .dialog-content h6 {
+      color: #1f1f1f;
+      font-weight: 600;
+      line-height: 1.25;
+      margin-top: 24px;
+      margin-bottom: 16px;
+    }
+
+    .dialog-content h1 {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--doc-border);
+      font-size: 2rem;
+    }
+
+    .dialog-content h2 {
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--doc-border);
+      font-size: 1.5rem;
+    }
+
+    .dialog-content h3 {
+      font-size: 1.25rem;
+    }
+
+    .dialog-content h4 {
+      font-size: 1rem;
+    }
+
+    .dialog-content h1:first-child,
+    .dialog-content h2:first-child,
+    .dialog-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .dialog-content p {
+      margin: 0 0 16px;
+    }
+
+    .dialog-content ul,
+    .dialog-content ol {
+      margin: 0 0 16px;
+      padding-left: 32px;
+    }
+
+    .dialog-content li {
+      margin: 4px 0;
+    }
+
+    .dialog-content li > ul,
+    .dialog-content li > ol {
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+
+    .dialog-content a {
+      color: var(--doc-link);
+      text-decoration: none;
+    }
+
+    .dialog-content a:hover {
+      color: #064787;
+      text-decoration: underline;
+    }
+
+    .dialog-content code {
+      padding: 2px 6px;
+      color: #c7254e;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        Menlo,
+        monospace;
+      font-size: 0.875em;
+    }
+
+    .dialog-content pre {
+      display: block;
+      margin: 0 0 16px;
+      padding: 16px;
+      overflow: auto;
+      color: #24292f;
+      background: #f6f8fa;
+      border: 1px solid var(--doc-border);
+      border-radius: 6px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+
+    .dialog-content pre code {
+      display: block;
+      padding: 0;
+      color: inherit;
+      background: transparent;
+      border-radius: 0;
+      white-space: pre;
+    }
+
+    .dialog-content table {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 0 16px;
+      overflow-x: auto;
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    .dialog-content th,
+    .dialog-content td {
+      padding: 10px 13px;
+      border: 1px solid var(--doc-border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .dialog-content th {
+      color: #1f1f1f;
+      font-weight: 600;
+      background: #f0f0f0;
+    }
+
+    .dialog-content tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .dialog-content blockquote {
+      margin: 0 0 16px;
+      padding: 10px 16px;
+      color: #535158;
+      background: var(--doc-soft);
+      border-left: 4px solid #9b59b6;
+    }
+
+    .dialog-content blockquote > :last-child {
+      margin-bottom: 0;
+    }
+
+    .dialog-content hr {
+      height: 1px;
+      margin: 24px 0;
+      padding: 0;
+      background: var(--doc-border);
+      border: 0;
+    }
+
+    .dialog-content img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 20px auto;
+      border-radius: 6px;
+    }
+
+    .dialog-content input[type="checkbox"] {
+      margin-right: 7px;
+      accent-color: #6b4fbb;
+    }
+
+    .dialog-content .task-list-item {
+      list-style: none;
+    }
+
+    .dialog-content details {
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: #fafafa;
+      border: 1px solid var(--doc-border);
+      border-radius: 6px;
+    }
+
+    .dialog-content summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* =========================================================
+       MENSAJES
+       ========================================================= */
+
+    .markdown-loading,
+    .markdown-error {
+      padding: 24px;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .markdown-loading {
+      color: #535158;
+      background: #f8f8f8;
+    }
+
+    .markdown-error {
+      color: #8a1f11;
+      background: #fff2f0;
+      border: 1px solid #f1b5ae;
+    }
+
+    .markdown-error code {
+      display: inline-block;
+      margin: 10px 0;
+    }
+
+    .notice {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.22);
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 600px) {
+      header {
+        padding: 15px;
+      }
+
+      .search {
+        width: 100%;
+      }
+
+      main {
+        padding: 18px 12px 35px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .modal {
+        padding: 0;
+      }
+
+      .dialog {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+
+      .dialog-content {
+        padding: 22px 16px;
+        font-size: 15px;
+      }
+
+      .dialog-content h1 {
+        font-size: 1.65rem;
+      }
+
+      .dialog-content h2 {
+        font-size: 1.35rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        scroll-behavior: auto !important;
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>Repositorio de Prompts DP</h1>
+        <p>
+          Documentación por etapa del proceso de Data Processing
+        </p>
+      </div>
+
+      <input
+        id="search"
+        class="search"
+        type="search"
+        placeholder="Buscar etapa o contenido..."
+        aria-label="Buscar documentación"
+        autocomplete="off"
+      />
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div
+        id="status"
+        class="status"
+        aria-live="polite"
+      >
+        Cargando archivos Markdown...
+      </div>
+
+      <div class="legend">
+        <span>📖 Ver contenido</span>
+        <span>⬇ Descargar .md</span>
+      </div>
+    </div>
+
+    <section
+      id="grid"
+      class="grid"
+      aria-label="Etapas del repositorio"
+    ></section>
+
+    <div class="notice">
+      <strong>GitHub Pages:</strong>
+      conserva en el repositorio los archivos Markdown respetando
+      exactamente los nombres, las mayúsculas, las minúsculas y las
+      rutas indicadas en el código.
+    </div>
+  </main>
+
+  <!-- Modal para visualizar los documentos Markdown -->
+  <div
+    id="modal"
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+  >
+    <article class="dialog">
+      <div class="dialog-head">
+        <h2 id="modalTitle">Contenido</h2>
+
+        <button
+          id="closeModal"
+          class="close"
+          type="button"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      </div>
+
+      <div
+        id="modalContent"
+        class="dialog-content"
+      ></div>
+    </article>
+  </div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      /*
+       * IMPORTANTE:
+       * Los nombres y rutas deben coincidir exactamente con los archivos
+       * guardados en el repositorio de GitHub.
+       *
+       * GitHub Pages distingue entre mayúsculas y minúsculas.
+       */
+
+      const documents = [
+        {
+          stage: "General",
+          title: "README principal",
+          path: "Principal.md"
+        },
+        {
+          stage: "Cobertura",
+          title: "Cobertura del temario DPT",
+          path: "cobertura-temario-dpt.md"
+        },
+        {
+          stage: "Etapa 00",
+          title: "Captura iField",
+          path: "auditor-scripting-ifield.md"
+        },
+        {
+          stage: "Etapa 01",
+          title: "PDT",
+          path: "PDT.md"
+        },
+        {
+          stage: "Etapa 02",
+          title: "Validación de base de datos",
+          path: "generar-script-validacion-dms.md"
+        },
+        {
+          stage: "Etapa 03",
+          title: "Variables",
+          path: "qa-variables-pdt-vs-scripts-dms.md"
+        },
+        {
+          stage: "Etapa 04",
+          title: "Codificación",
+          path: "qa-libro-codigos-vs-base.md"
+        },
+        {
+          stage: "Etapa 05",
+          title: "Ponderación",
+          path: "ponderacion.md"
+        },
+        {
+          stage: "Etapa 06",
+          title: "Unión de bases",
+          path: "union-bases.md"
+        },
+        {
+          stage: "Etapa 07",
+          title: "Bases de datos",
+          path: "qa-entregable-bvc-sav.md"
+        },
+        {
+          stage: "Etapa 08",
+          title: "Harmoni",
+          path: "qa-proyecto-harmoni.md"
+        },
+        {
+          stage: "Etapa 09",
+          title: "Tablas Excel",
+          path: "qa-tablas-vs-pdt.md"
+        },
+        {
+          stage: "Etapa 10",
+          title: "SPSS",
+          path: "prompts/10-spss/SPSS.md"
+        }
+      ];
+
+      const state = [];
+
+      const grid = document.getElementById("grid");
+      const statusElement = document.getElementById("status");
+      const searchInput = document.getElementById("search");
+
+      const modal = document.getElementById("modal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalContent = document.getElementById("modalContent");
+      const closeModalButton = document.getElementById("closeModal");
+
+      let previousFocus = null;
+
+      /*
+       * Configuración de marked.js.
+       */
+      if (window.marked) {
+        marked.setOptions({
+          gfm: true,
+          breaks: false,
+          pedantic: false
+        });
+      }
+
+      /*
+       * Convierte caracteres especiales en entidades HTML.
+       * Se usa para impedir que texto externo se interprete como HTML.
+       */
+      function escapeHtml(value = "") {
+        return String(value).replace(
+          /[&<>"']/g,
+          (character) => {
+            const entities = {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              "\"": "&quot;",
+              "'": "&#039;"
+            };
+
+            return entities[character];
+          }
+        );
+      }
+
+      /*
+       * Elimina la sintaxis Markdown para construir el resumen
+       * que aparece en cada tarjeta.
+       */
+      function stripMarkdown(markdown = "") {
+        return String(markdown)
+          .replace(/```[\s\S]*?```/g, " ")
+          .replace(/~~~[\s\S]*?~~~/g, " ")
+          .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+          .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+          .replace(/^#{1,6}\s+/gm, "")
+          .replace(/^\s*>\s?/gm, "")
+          .replace(/^\s*[-*+]\s+/gm, "")
+          .replace(/^\s*\d+\.\s+/gm, "")
+          .replace(/[\\*_`~|]/g, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function isExternalUrl(url = "") {
+        return /^(https?:)?\/\//i.test(url);
+      }
+
+      function isSpecialUrl(url = "") {
+        return /^(mailto:|tel:|data:|blob:|javascript:)/i.test(url);
+      }
+
+      /*
+       * Resuelve imágenes y enlaces tomando como referencia la ubicación
+       * del archivo Markdown.
+       *
+       * Esto permite que funcione también cuando GitHub Pages publica
+       * el sitio dentro de:
+       *
+       * usuario.github.io/nombre-repositorio/
+       */
+      function resolveUrl(url, markdownPath) {
+        if (
+          !url ||
+          url.startsWith("#") ||
+          isExternalUrl(url) ||
+          isSpecialUrl(url)
+        ) {
+          return url;
+        }
+
+        try {
+          const markdownUrl = new URL(
+            markdownPath,
+            window.location.href
+          );
+
+          return new URL(url, markdownUrl).href;
+        } catch (error) {
+          console.warn("No se pudo resolver la URL:", url, error);
+          return url;
+        }
+      }
+
+      /*
+       * Convierte Markdown a HTML y después lo sanitiza.
+       */
+      function markdownToHtml(
+        markdown = "",
+        markdownPath = ""
+      ) {
+        if (!window.marked || !window.DOMPurify) {
+          return `
+            <div class="markdown-error">
+              <h3>No se cargó el renderizador Markdown</h3>
+
+              <p>
+                Comprueba que el navegador pueda acceder a
+                <code>cdn.jsdelivr.net</code>.
+              </p>
+            </div>
+          `;
+        }
+
+        const rawHtml = marked.parse(markdown);
+
+        const safeHtml = DOMPurify.sanitize(rawHtml, {
+          USE_PROFILES: {
+            html: true
+          },
+          ADD_ATTR: [
+            "target",
+            "rel",
+            "class",
+            "id",
+            "checked",
+            "disabled"
+          ]
+        });
+
+        const container = document.createElement("div");
+
+        container.innerHTML = safeHtml;
+
+        /*
+         * Ajustar imágenes relativas.
+         */
+        container
+          .querySelectorAll("img[src]")
+          .forEach((image) => {
+            const source = image.getAttribute("src");
+
+            image.src = resolveUrl(
+              source,
+              markdownPath
+            );
+
+            image.loading = "lazy";
+            image.decoding = "async";
+          });
+
+        /*
+         * Ajustar hipervínculos relativos.
+         */
+        container
+          .querySelectorAll("a[href]")
+          .forEach((link) => {
+            const originalHref = link.getAttribute("href");
+
+            const resolvedHref = resolveUrl(
+              originalHref,
+              markdownPath
+            );
+
+            link.setAttribute(
+              "href",
+              resolvedHref
+            );
+
+            if (isExternalUrl(resolvedHref)) {
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+            }
+
+            /*
+             * Si el enlace apunta a otro archivo Markdown,
+             * se abre dentro del modal.
+             */
+            const cleanPath = resolvedHref
+              .split(/[?#]/)[0]
+              .toLowerCase();
+
+            if (cleanPath.endsWith(".md")) {
+              link.addEventListener(
+                "click",
+                (event) => {
+                  event.preventDefault();
+                  openMarkdownByUrl(resolvedHref);
+                }
+              );
+            }
+          });
+
+        /*
+         * Las casillas Markdown son solo de lectura.
+         */
+        container
+          .querySelectorAll('input[type="checkbox"]')
+          .forEach((input) => {
+            input.disabled = true;
+          });
+
+        return container.innerHTML;
+      }
+
+      /*
+       * Dibuja las tarjetas y aplica el filtro de búsqueda.
+       */
+      function render(filter = "") {
+        const query = filter
+          .toLowerCase()
+          .trim();
+
+        const filteredDocuments = state.filter(
+          (documentData) => {
+            const searchableContent = `
+              ${documentData.stage}
+              ${documentData.title}
+              ${documentData.path}
+              ${documentData.text}
+            `.toLowerCase();
+
+            return searchableContent.includes(query);
+          }
+        );
+
+        if (!filteredDocuments.length) {
+          grid.innerHTML = `
+            <div class="empty">
+              No hay resultados para
+              “${escapeHtml(filter)}”.
+            </div>
+          `;
+
+          return;
+        }
+
+        grid.innerHTML = "";
+
+        filteredDocuments.forEach((documentData) => {
+          const article = document.createElement("article");
+
+          article.className = "card";
+
+          const summary = documentData.ok
+            ? stripMarkdown(documentData.text).slice(0, 440)
+            : documentData.text;
+
+          article.innerHTML = `
+            <div class="card-head"></div>
+
+            <div class="card-body">
+              <div class="stage">
+                ${escapeHtml(documentData.stage)}
+              </div>
+
+              <h2 class="title">
+                ${escapeHtml(documentData.title)}
+              </h2>
+
+              <p class="summary">
+                ${escapeHtml(summary)}
+              </p>
+
+              <div class="path">
+                ${escapeHtml(documentData.path)}
+              </div>
+
+              <div class="actions">
+                <button
+                  class="btn view-document"
+                  type="button"
+                  ${documentData.ok ? "" : "disabled"}
+                >
+                  Ver contenido
+                </button>
+
+                <a
+                  class="btn secondary"
+                  href="${encodeURI(documentData.path)}"
+                  download
+                >
+                  Descargar .md
+                </a>
+              </div>
+            </div>
+          `;
+
+          const viewButton = article.querySelector(
+            ".view-document"
+          );
+
+          viewButton.addEventListener(
+            "click",
+            () => {
+              openDocument(documentData.path);
+            }
+          );
+
+          grid.appendChild(article);
+        });
+      }
+
+      /*
+       * Carga todos los archivos Markdown.
+       */
+      async function loadDocuments() {
+        grid.innerHTML = documents
+          .map((documentData) => {
+            return `
+              <article class="card skeleton">
+                <div class="card-head"></div>
+
+                <div class="card-body">
+                  <div class="stage">
+                    ${escapeHtml(documentData.stage)}
+                  </div>
+
+                  <h2 class="title">
+                    ${escapeHtml(documentData.title)}
+                  </h2>
+
+                  <div class="summary"></div>
+
+                  <div class="path">
+                    ${escapeHtml(documentData.path)}
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+
+        const loadedDocuments = await Promise.all(
+          documents.map(async (documentData) => {
+            try {
+              const response = await fetch(
+                encodeURI(documentData.path),
+                {
+                  cache: "no-cache"
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `HTTP ${response.status}`
+                );
+              }
+
+              const text = await response.text();
+
+              return {
+                ...documentData,
+                text,
+                ok: true
+              };
+            } catch (error) {
+              return {
+                ...documentData,
+                text:
+                  `No se pudo cargar el archivo ` +
+                  `(${error.message}). Verifica su nombre, ` +
+                  `las mayúsculas, las minúsculas y su ruta.`,
+                ok: false
+              };
+            }
+          })
+        );
+
+        state.splice(
+          0,
+          state.length,
+          ...loadedDocuments
+        );
+
+        const successfulDocuments = loadedDocuments.filter(
+          (documentData) => documentData.ok
+        ).length;
+
+        statusElement.textContent =
+          `${successfulDocuments} de ` +
+          `${loadedDocuments.length} documentos cargados`;
+
+        render(searchInput.value);
+      }
+
+      /*
+       * Abre el modal.
+       */
+      function showModal(title, html) {
+        previousFocus = document.activeElement;
+
+        modalTitle.textContent = title;
+        modalContent.innerHTML = html;
+
+        modal.classList.add("open");
+        document.body.style.overflow = "hidden";
+
+        closeModalButton.focus();
+      }
+
+      /*
+       * Abre un documento de la lista principal.
+       */
+      function openDocument(path) {
+        const documentData = state.find(
+          (item) => item.path === path
+        );
+
+        if (!documentData || !documentData.ok) {
+          return;
+        }
+
+        const html = markdownToHtml(
+          documentData.text,
+          documentData.path
+        );
+
+        showModal(
+          documentData.title,
+          html
+        );
+      }
+
+      /*
+       * Abre un archivo Markdown enlazado desde otro documento.
+       */
+      async function openMarkdownByUrl(url) {
+        showModal(
+          "Cargando documento...",
+          `
+            <div class="markdown-loading">
+              Cargando contenido...
+            </div>
+          `
+        );
+
+        try {
+          const response = await fetch(
+            url,
+            {
+              cache: "no-cache"
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `HTTP ${response.status}`
+            );
+          }
+
+          const markdown = await response.text();
+
+          const urlObject = new URL(
+            url,
+            window.location.href
+          );
+
+          const fileName = decodeURIComponent(
+            urlObject.pathname
+              .split("/")
+              .pop() || "Documento Markdown"
+          );
+
+          modalTitle.textContent = fileName;
+
+          modalContent.innerHTML = markdownToHtml(
+            markdown,
+            url
+          );
+        } catch (error) {
+          modalTitle.textContent =
+            "No se pudo abrir el documento";
+
+          modalContent.innerHTML = `
+            <div class="markdown-error">
+              <h3>Error al cargar el archivo</h3>
+
+              <p>No se pudo cargar:</p>
+
+              <code>${escapeHtml(url)}</code>
+
+              <p>${escapeHtml(error.message)}</p>
+            </div>
+          `;
+        }
+      }
+
+      /*
+       * Cierra el modal.
+       */
+      function closeModal() {
+        modal.classList.remove("open");
+
+        document.body.style.overflow = "";
+        modalContent.innerHTML = "";
+
+        if (previousFocus) {
+          previousFocus.focus();
+        }
+      }
+
+      /*
+       * Eventos.
+       */
+      searchInput.addEventListener(
+        "input",
+        (event) => {
+          render(event.target.value);
+        }
+      );
+
+      closeModalButton.addEventListener(
+        "click",
+        closeModal
+      );
+
+      modal.addEventListener(
+        "click",
+        (event) => {
+          if (event.target === modal) {
+            closeModal();
+          }
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            event.key === "Escape" &&
+            modal.classList.contains("open")
+          ) {
+            closeModal();
+          }
+        }
+      );
+
+      /*
+       * Inicio de la aplicación.
+       */
+      loadDocuments();
+    });
+  </script>
+</body>
+</html>
