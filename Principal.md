@@ -25,11 +25,11 @@ Detalle completo, contenido por contenido: **[docs/cobertura-temario-dpt.md](doc
 │   └── cobertura-temario-dpt.md   ← matriz de cobertura proceso vs prompts
 └── prompts/                       ← LOS PROMPTS, una carpeta por etapa
     ├── 00-captura-ifield/         ← pre-DP: auditoría de scripting de campo
-    ├── 01-pdt/                    🔴 pendiente (prioridad #1)
+    ├── 01-pdt/                    🟡 prueba
     ├── 02-validacion-bd/          🟢
     ├── 03-variables/              🟢
     ├── 04-codificacion/           🟡
-    ├── 05-ponderacion/            🔴 pendiente
+    ├── 05-ponderacion/            🟡 prueba
     ├── 06-union-bases/            🔴 pendiente
     ├── 07-bases-datos/            🟡
     ├── 08-harmoni/                🟢
