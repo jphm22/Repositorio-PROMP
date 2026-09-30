@@ -10,12 +10,12 @@ Tu objetivo es validar la correcta implementación de la ponderación de una bas
 
 ## INPUTS REQUERIDOS
 
-### INPUTS REQUERIDOS
 
 Obligatorios:
 
 - PDT / TabSpecs / Especificación de la SL.
 - Script 7 de ponderación.
+- Eficiencia de ponderacion generada por el script 7
 
 Opcionales:
 
@@ -28,23 +28,29 @@ Opcionales:
 Si falta algún archivo, indicar qué validaciones no pueden realizarse.
 
 
-## PASO 1: IDENTIFICAR EL TIPO DE PONDERACIÓN
+### PASO 1: IDENTIFICAR EL TIPO DE PONDERACIÓN
 
 Identifica automáticamente el método utilizado:
 
 - RIM
 - TARGET
 - FACTORS
+- Ponderación por pesos individuales (encuestado por encuestado)
 - Ponderación geográfica
 - Ponderación por NSE
 - Ponderación Urbano/Rural
 - Ponderación multietapa
+- Ponderación Multi-Country
 - Otro
 
-Indica el método detectado.
+Indica claramente:
 
----
+- Método detectado.
+- Evidencia encontrada.
+- Archivo donde se identificó.
+- Justificación.
 
+Si existen múltiples métodos dentro del mismo estudio, describir cada uno por separado.
 ## PASO 2: VALIDAR LA ESPECIFICACIÓN
 
 Comparar el resumen de ponderación contra la especificación enviada por la SL.
@@ -60,6 +66,7 @@ Verificar:
 Reportar cualquier diferencia.
 
 ---
+
 
 ## PASO 3: VALIDAR TARGETS O UNIVERSOS
 
@@ -81,6 +88,122 @@ Si la ponderación es geográfica o multietapa:
 
 ---
 
+### PASO 3A: VALIDACIÓN DE PONDERACIÓN POR PESOS INDIVIDUALES
+
+Si la ponderación consiste en asignar pesos específicos a cada entrevistado mediante un identificador único (ID, RespondentID, Serial, iirepSerial u otro):
+
+Ejemplos:
+
+IF iirepSerial = 1 THEN WTVAR = 1.52
+
+IF RespondentID = 12345 THEN WTVAR = 0.87
+
+Validar:
+
+- Correspondencia entre Base y Script.
+- Existencia de todos los IDs utilizados.
+- IDs duplicados.
+- IDs faltantes.
+- Casos sin peso asignado.
+- Casos con más de un peso asignado.
+- Pesos negativos.
+- Pesos iguales a cero.
+- Pesos nulos.
+- Consistencia entre la variable de peso y el script.
+
+Calcular cuando sea posible:
+
+- Peso mínimo.
+- Peso máximo.
+- Peso promedio.
+- Mediana.
+- Ratio Peso Máximo / Peso Mínimo.
+
+Clasificar:
+
+<= 2 = Excelente
+
+2 - 5 = Aceptable
+
+5 - 10 = Riesgoso
+
+> 10 = Crítico
+
+Reportar cualquier inconsistencia encontrada.
+
+Si todos los pesos coinciden entre Base y Script, indicarlo explícitamente.
+
+
+### PASO 3B: VALIDACIÓN DE PONDERACIONES MULTI-COUNTRY
+
+Si el estudio incluye múltiples países:
+
+Detectar automáticamente:
+
+- Cantidad total de países.
+- Países incluidos.
+- Método de ponderación utilizado en cada país.
+- Variables utilizadas en cada país.
+- Targets utilizados en cada país.
+- Filtros utilizados en cada país.
+
+IMPORTANTE:
+
+No asumir que todos los países utilizan:
+
+- El mismo método.
+- Las mismas variables.
+- Los mismos universos.
+- Los mismos targets.
+- Los mismos filtros.
+- La misma estructura de ponderación.
+
+Cada país deberá ser auditado de forma independiente.
+
+Para cada país reportar:
+
+1. Método utilizado.
+2. Variables de ponderación.
+3. Targets aplicados.
+4. Tamaño de muestra original.
+5. Tamaño de muestra ponderada.
+6. Eficiencia.
+7. Peso mínimo.
+8. Peso máximo.
+9. Principales riesgos detectados.
+
+Validar:
+
+- Correspondencia PDT vs Script por país.
+- Correspondencia de targets por país.
+- Correspondencia de variables por país.
+- Correspondencia de filtros por país.
+
+Detectar:
+
+- Países sin ponderación.
+- Países con targets incorrectos.
+- Países con especificaciones inconsistentes.
+- Países con variables faltantes.
+- Países con diferencias de implementación.
+
+Generar además:
+
+### Resumen Consolidado Regional
+
+Indicar:
+
+- País con mejor eficiencia.
+- País con peor eficiencia.
+- País con mayor dispersión de pesos.
+- País con menor dispersión de pesos.
+- País con mayor riesgo estadístico.
+- País con mejor calidad de ponderación.
+
+Emitir:
+
+- Conclusión individual por país.
+- Conclusión general del estudio regional.
 ## PASO 4: VALIDAR TAMAÑO DE MUESTRA
 
 Revisar:
@@ -100,25 +223,33 @@ Si existe diferencia, explicar la posible causa.
 
 ---
 
-## PASO 5: VALIDAR EFICIENCIA DE PONDERACIÓN
+### PASO 5: VALIDAR EFICIENCIA DE PONDERACIÓN
 
-Revisar la eficiencia reportada por el Script 7.
+Revisar la eficiencia reportada por la ponderación.
 
-Criterio de aprobación:
+Clasificación:
 
-✅ Entre 80% y 120% = Conforme
+>= 90% = Excelente
 
-⚠️ Menor a 80% = Revisar ponderación
+80% - 89.9% = Buena
 
-⚠️ Mayor a 120% = Revisar cálculo o configuración
+70% - 79.9% = Aceptable
+
+60% - 69.9% = Riesgosa
+
+< 60% = Crítica
 
 Reportar:
 
-- Eficiencia obtenida
-- Resultado
-- Comentario QA
+- Eficiencia obtenida.
+- Resultado.
+- Comentario QA.
 
----
+Si la eficiencia es menor a 60%:
+
+- Evaluar riesgo metodológico.
+- Identificar la variable responsable.
+- Recomendar escalamiento a la SL antes de liberar la base.
 
 ## PASO 6: VALIDAR FACTORES DE PONDERACIÓN
 
@@ -355,3 +486,45 @@ Clasificación:
 2 - 5 = Aceptable
 5 - 10 = Riesgoso
 > 10 = Crítico
+
+### CHECKLIST FINAL OBLIGATORIO
+
+Responder obligatoriamente:
+
+□ Tipo de ponderación identificado correctamente.
+
+□ PDT coincide con Script.
+
+□ Variables correctas.
+
+□ Targets correctos.
+
+□ Método correcto.
+
+□ Filtros correctos.
+
+□ Variable Weight correcta.
+
+□ TotalType correcto.
+
+□ Convergencia correcta.
+
+□ Eficiencia evaluada.
+
+□ Dispersión de pesos evaluada.
+
+□ Riesgo metodológico identificado.
+
+□ Escalamiento a SL evaluado.
+
+□ Aprobado para Producción (Sí/No).
+
+□ Validación por pesos individuales realizada (si aplica).
+
+□ Validación Multi-Country realizada (si aplica).
+
+□ Se validó cada país de forma independiente (si aplica).
+
+□ Existen países sin ponderación (Sí/No).
+
+□ Existen pesos extremos (Sí/No).
