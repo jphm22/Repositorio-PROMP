@@ -1,161 +1,223 @@
-# PROMPT — QA de Tablas (Tablas.md)
+## PROMPT — QA de Tablas vs. PDT (versión actualizada)
 
-> **Cómo usar:** Adjunta los 4 archivos (`TABLAS_Ban01.md` / `TABLAS_Ban02.md` / etc., `PDT.md`, `CUESTIONARIO.md`, `LC.md`) o pégalos en contexto, y luego envía este prompt.
->
-> **Nomenclatura del archivo de tablas:** El archivo de tablas debe nombrarse indicando el número de banner que aplica (ej. `26-015551-01TABLAS_V1_04May26_COLOMBIA__Ban01_(SDS).md`, `..._Ban02_...md`). Esto permite saber contra qué banner del PDT se debe contrastar (columna `# Banner` en PDT). Si se entregan varios archivos `Ban0X`, revisa cada uno por separado contra el banner correspondiente.
+### Cómo usar
+Adjunta los siguientes archivos y luego ejecuta este prompt:
 
----
+1. **TABLAS_BanXX.md o TABLAS_BanXX.xlsx** — tablas finales que se deben revisar.
+2. **Excel original de tablas** — obligatorio para recalcular porcentajes y estadísticos. Puede ser el mismo archivo anterior si conserva bases, frecuencias y valores numéricos sin pérdida de precisión.
+3. **PDT.md o PDT.xlsx** — Plan de Tablas.
+4. **CUESTIONARIO.md** — cuestionario de campo.
+5. **LC.md** — Libro de Códigos, cuando existan variables `_CODED`.
+6. **Scripts auxiliares**, cuando correspondan:
+   - `fijar_axis_mdd.py`
+   - script de corrección con sufijo `_isFixed.mrs`
 
-## Rol
-
-Actúa como **QA Senior de Procesamiento de Datos** en una empresa de investigación de mercado (estilo IPSOS). Tu tarea es revisar exhaustivamente el archivo **TABLA.md** y verificar que sea consistente con los requerimientos del **PDT.md**, el **CUESTIONARIO.md** y el **LC.md** (Libro de Códigos).
-
-## Documentos de entrada
-
-1. **TABLAS_BanXX.md** — tablas cross-tab finales que se deben revisar (output del procesamiento). El sufijo `BanXX` indica el número de banner aplicado (Ban01, Ban02, etc.). Cada archivo de tablas corresponde a un único banner del PDT, por lo que **solo deben revisarse las preguntas que en la columna `# Banner` del PDT incluyan ese número**.
-2. **PDT.md** — Plan de Tablas (especificación). Contiene:
-   - Hoja `Plan de tablas`: cada fila define una tabla. Columnas clave:
-     - `¿Procesar?¿Ocultar?`: `R` = mostrar, `£` = ocultar/tachar.
-     - `Tipo de pregunta` (Categorical, Long, Double, Ranking, Título).
-     - `Procesar como` (Tabla, TablaxAtrib, TablaxAtrib1H, Summary).
-     - `New/Delete`: `New` = variable nueva.
-     - `Variable`, `NomTabla`, `Título de Tabla`.
-     - `Side, Y (Fila)`, `Top, X (Columna)`, `# Banner`. **`# Banner` indica contra qué banner(s) se cruzará la pregunta** (ej. `1`, `2`, `1,2`, `2,3`). El nombre del archivo de tablas (`Ban01`, `Ban02`...) define qué banner se está revisando, y solo aplican las preguntas cuyo `# Banner` contenga ese número.
-     - `Sort answer?`, `Filtro`, `Texto de Base`.
-     - `Mostrar Dif. Sig. Grid?`, `Dif. Sig. Grid`.
-     - `Prom. Gral`, `Mediana Gral`, `Desv. Est. Gral`, `Excluir códigos en Prom.`.
-     - `¿Escala?`, `Max Value`, `Min Value`, `T2B`, `B2B`, `T3B`, `B3B`, `Prom`, `DsvStd`, `NPS`.
-   - Hoja `Banners`: define los cortes del banner (top).
-   - Hoja `Variables`, `Marca de clase`, `Neteos`.
-3. **CUESTIONARIO.md** — formulario de campo. Define fraseos originales de preguntas, opciones de respuesta y filtros/ruteos.
-4. **LC.md** — Libro de Códigos (Verbatims). Mapea respuestas abiertas a categorías codificadas. Aplica solo a variables `XXXX_CODED`.
+El archivo de tablas debe identificar el banner aplicado, por ejemplo: `..._Ban01_...`, `..._Ban02_...`. Cada archivo se revisa únicamente contra las filas del PDT cuyo campo **# Banner** incluya ese número.
 
 ---
 
-## Checks a realizar
+### Rol
 
-Revisa **cada tabla** del TABLA.md aplicando los siguientes 13 bloques de verificación.
+Actúa como **QA Senior de Procesamiento de Datos** en una empresa de investigación de mercado. Revisa exhaustivamente las tablas finales y verifica su consistencia con el PDT, el cuestionario, el LC y el Excel original.
+
+No te limites a revisar estructura o presencia de elementos. Debes **recalcular y validar los resultados numéricos** utilizando el Excel original.
+
+---
+
+### Reglas previas obligatorias
+
+Antes de emitir el veredicto:
+
+1. Identifica el `BanXX` de cada archivo y filtra primero el alcance por **# Banner** del PDT.
+2. Si se adjunta `fijar_axis_mdd.py`, ejecútalo antes de revisar el orden de categorías y conserva en el reporte la evidencia de ejecución. Después, valida nuevamente el orden resultante.
+3. Si existe un código nuevo o una corrección para una categoría semánticamente excluyente, comprueba que el fix esté incorporado y ejecuta el script `_isFixed.mrs` proporcionado. Después, revisa la salida corregida.
+4. Usa el **Excel original** para validar porcentajes, agregados y estadísticos. El Markdown sirve para revisar presentación, pero no reemplaza la fuente numérica.
+5. Si un script no está adjunto o no puede ejecutarse, no declares el check como aprobado. Regístralo en **No verificable**, indicando exactamente qué archivo falta o qué error impidió la ejecución.
+6. No inventes resultados ni asumas que un fix fue aplicado solo porque se menciona en el nombre del archivo.
+
+---
+
+## Checks obligatorios
 
 ### 1. Consistencia con PDT
-- **Filtrar por banner primero**: Identifica el `BanXX` del archivo de tablas. Solo aplican las filas del PDT cuyo `# Banner` contenga ese número (ej. si revisas `Ban01`, solo aplican variables con `# Banner = 1`, `1,2`, `1,3`, etc.).
-- Toda variable con `R` en PDT y banner correspondiente debe tener su tabla en TABLAS_BanXX.md.
-- Toda variable con `£` (tachada) en PDT NO debe aparecer en las tablas.
-- Toda tabla en TABLAS_BanXX.md debe existir en el PDT con el banner correcto (no debe haber tablas extra ni cruzadas con un banner equivocado).
-- El **título** de cada tabla debe coincidir con la columna "Título de Tabla" del PDT.
-- El **filtro/base** mostrado debe coincidir con "Texto de Base" del PDT.
-- El **banner** usado debe coincidir con "Top, X (Columna)" + "# Banner" del PDT.
-- En tablas tipo **Grid**: side y top no deben ser idénticos.
-- Si `¿Escala? = True`: la tabla debe mostrar T2B/B2B (y T3B/B3B si Max Value > 5), Prom, DsvStd según indicado.
-- Si `Prom. Gral = True`: debe aparecer promedio, mediana, desv. estándar.
-- Variables abiertas codificadas deben llamarse `XXXX_CODED` en PDT y en tabla.
-- Si hay 1ra mención + otras menciones: debe existir Total menciones.
-- Preguntas múltiples / 100% deben estar ordenadas de mayor a menor % (no aplica a ordinales, escalas, frecuencia).
-- Códigos excluyentes (NP, NS/NR, No sabe) deben ir al final y no incluirse en el promedio.
 
-### 2. Consistencia con CUESTIONARIO
-- El **fraseo** de la pregunta en la tabla debe coincidir (en sentido) con el cuestionario.
-- Las **etiquetas de respuesta** deben corresponder a las opciones del cuestionario.
-- El **filtro** aplicado debe coincidir con la instrucción de ruteo (ej. "Solo si F16=Sí").
-- Preguntas tachadas/eliminadas en cuestionario NO deben aparecer.
+- Toda variable con `R` y banner aplicable debe aparecer.
+- Toda variable con `£` o marcada para ocultar no debe aparecer.
+- No debe haber tablas extra ni tablas cruzadas con un banner distinto.
+- Título, filtro/base, side, top, NomTabla y banner deben coincidir con el PDT.
+- En Grid, side y top no deben ser idénticos.
+- Si `¿Escala? = True`, deben aparecer los agregados y estadísticos solicitados.
+- Si `Prom. Gral = True`, deben aparecer promedio, mediana y desviación estándar.
+- Las abiertas codificadas deben conservar el sufijo `_CODED`.
+- Si existen primera y otras menciones, debe existir Total menciones.
+- Las preguntas múltiples que deban ordenarse por porcentaje deben aparecer de mayor a menor, salvo ordinales, escalas y frecuencia.
 
-### 3. Consistencia con LC (solo variables _CODED)
-- Las etiquetas de respuesta deben coincidir con las categorías del LC.
-- Los códigos numéricos usados deben existir en la columna `CODIGO` del LC.
-- El idioma de las etiquetas debe ser el mismo del LC.
+### 2. Consistencia con cuestionario
 
-### 4. Etiquetas
-- Sin símbolos de encoding roto (Â, ã, â, etc.).
-- Sin HTML (`<br>`, `&amp;`, `&nbsp;`, etc.).
-- Sin etiquetas que correspondan a otro proyecto.
-- Sin mezcla de español/inglés sin criterio.
-- Sin etiquetas repetidas en la misma tabla.
-- Sin secuencia `{#` (templates no resueltos).
-- No mostrar solo códigos numéricos en lugar de etiquetas.
-- Idioma uniforme en todo el documento.
+- El fraseo debe coincidir semánticamente con el cuestionario.
+- Las etiquetas deben corresponder a las opciones de respuesta.
+- El filtro debe coincidir con el ruteo.
+- Las preguntas eliminadas o tachadas no deben aparecer.
+
+### 3. Consistencia con LC
+
+Solo para variables `_CODED`:
+
+- Etiquetas, códigos e idioma deben coincidir con el LC.
+- No debe aparecer un código inexistente en la columna `CODIGO`.
+
+### 4. Etiquetas y calidad de texto
+
+- Sin encoding roto, HTML, templates sin resolver, etiquetas repetidas ni textos de otro proyecto.
+- No mostrar únicamente códigos numéricos cuando corresponde una etiqueta.
+- Mantener el idioma uniforme.
 
 ### 5. Banners
-- La suma de los cortes del banner debe coincidir con la base total.
-- Las etiquetas de los cortes deben ser las indicadas en el PDT.
-- No debe faltar ningún corte definido en PDT.
-- Para preguntas de celdas/productos, validar que se aplica el banner correcto.
+
+- Cortes, etiquetas y bases deben coincidir con el PDT.
+- No debe faltar ningún corte.
+- La suma o composición de los cortes debe ser compatible con la base total según se trate de cortes exclusivos o superpuestos.
+- Para celdas o productos, debe aplicarse el banner correcto.
 
 ### 6. Grid's
-- Sin atributos repetidos en el grid.
-- No deben faltar atributos vs PDT/cuestionario.
-- La base de cada `TablaxAtrib` debe coincidir con la base del grid consolidado.
-- "Otros" / "Otro (especificar)" debe estar al final.
-- Si el grid depende de una pregunta previa (ej. solo productos seleccionados), no deben faltar opciones.
+
+- Sin atributos repetidos ni faltantes.
+- La base de cada `TablaxAtrib` debe coincidir con la base del grid consolidado cuando corresponda.
+- `Otro` y `Otro (especificar)` deben ir al final.
+- Si el grid depende de una selección previa, deben conservarse todas las opciones aplicables.
 
 ### 7. Neteos
-- Si el PDT especifica netos, deben aparecer en la tabla.
-- Los netos deben tener identado/sangría que los diferencie de las respuestas individuales.
 
-### 8. Estadísticos
-- Pregunta tipo escala: debe mostrar T2B, B2B (y T3B, B3B si Max Value > 5) y promedio.
-- Si el PDT indica T2B/B2B/T3B/B3B, no deben faltar.
-- Validar que los valores estadísticos sean consistentes (T2B = suma de los 2 códigos superiores).
-- Si NO es escala (en PDT) pero la tabla muestra T2B/B2B → error.
-- Si el PDT indica `NPS = True`, debe aparecer el indicador NPS.
+- Los netos definidos en el PDT deben aparecer.
+- Deben diferenciarse visualmente de las respuestas individuales.
+- Recalcula cada neto desde sus códigos componentes y verifica que no haya códigos omitidos o duplicados.
 
-### 9. Promedio
-- Pregunta numérica (Long/Double): debe mostrar promedio.
-- El promedio NO debe incluir códigos excluyentes (NP, No aplica, NS/NR), respetando la columna "Excluir códigos en Prom." del PDT.
+### 8. Códigos y textos excluyentes
 
-### 10. Marca de clase
-- Si PDT define marca de clase con promedio, debe aparecer en la tabla.
-- Si la tabla muestra promedio de marca de clase pero el PDT no lo especifica → error.
+Esta revisión es obligatoria incluso cuando el cuestionario o el PDT no utilicen códigos reservados típicos como `96`, `97`, `98` o `99`.
 
-### 11. Variables (nuevas)
-- Variables marcadas `New` en PDT deben aparecer en TABLA.md.
-- Variables nuevas en TABLA.md que no estén en PDT → error.
+- Detecta por código **y por semántica** respuestas excluyentes como: `Ninguno`, `Ninguna`, `No tengo`, `No aplica`, `No sabe`, `No responde`, `NS/NR`, `Prefiero no responder` y frases equivalentes.
+- Ejemplo: `No tengo ninguno de estos tipos de seguros` debe tratarse como excluyente aunque tenga un código no reservado.
+- Comprueba que una respuesta excluyente no coexista con respuestas sustantivas en una pregunta múltiple.
+- Comprueba que los códigos excluyentes estén ubicados al final del eje, después de las respuestas sustantivas.
+- Valida el orden tanto antes como después de ejecutar `fijar_axis_mdd.py`, si el script fue entregado.
+- Comprueba que los excluyentes no ingresen en promedio, mediana, desviación estándar, T2B/B2B/T3B/B3B, netos o total de menciones cuando no corresponda.
+- Si se creó un nuevo código para corregir la exclusividad, verifica el fix y la ejecución del `_isFixed.mrs` antes de aprobar.
 
-### 12. Consistencia lógica
-- Detectar inconsistencias entre tablas (ej. edad del encuestado 55 e hijo de 51 años; filtro de consumidores que incluye no consumidores).
-- Distribuciones demográficas (GÉNERO, NSE, RANGO DE EDAD) deben coincidir entre tablas equivalentes.
+### 9. Porcentajes y sumas al 100%
 
-### 13. Estructura general
-- El título incluye indicador de pregunta (F1., P1., etc.).
-- La base del grid coincide con la base de los desagregados.
-- Los totales del 100% suman correctamente (+/- 1% por redondeo).
-- Las respuestas no se repiten; para escalas/frecuencia no se ocultan respuestas.
-- Total menciones = 1ra mención + otras menciones.
-- Ninguna tabla aparece completamente vacía.
+Usa el Excel original, no solo el Markdown.
+
+- Recalcula cada porcentaje como `frecuencia / base válida × 100`.
+- En preguntas de respuesta única, verifica que las categorías exhaustivas sumen 100%, admitiendo únicamente la diferencia explicable por redondeo de las cifras mostradas.
+- Como control práctico, una tabla con porcentajes enteros puede admitir hasta ±1 punto porcentual por redondeo. Si muestra un decimal, la diferencia esperada debe ser mucho menor y justificarse con los valores sin redondear.
+- No exijas 100% en preguntas múltiples; valida en su lugar la base, el total de menciones y la lógica de cálculo.
+- Identifica bases incorrectas, porcentajes calculados sobre una base distinta o categorías omitidas.
+
+### 10. T2B, B2B, T3B y B3B
+
+- Determina los códigos componentes a partir de `Min Value`, `Max Value`, escala y definición del PDT.
+- Recalcula cada agregado con los valores del Excel original.
+- `T2B` debe ser exactamente la suma de los dos códigos superiores; `B2B`, la de los dos inferiores; `T3B` y `B3B`, la de los tres correspondientes.
+- No sumes porcentajes ya redondeados si existen frecuencias o valores sin redondear. Recalcula desde los conteos/base y luego aplica el formato de salida.
+- Reporta como error cualquier agregado que no coincida con sus códigos componentes dentro de la precisión de presentación.
+- Si no es una escala y aparecen estos agregados sin especificación del PDT, repórtalo.
+- Si `NPS = True`, recalcula `NPS = %Promotores - %Detractores` según los rangos definidos en el PDT.
+
+### 11. Promedio, mediana y desviación estándar
+
+Recalcula los tres estadísticos desde los datos o distribuciones del Excel original:
+
+- **Promedio:** suma ponderada de valores válidos dividida entre la base válida.
+- **Mediana:** valor central de los casos válidos ordenados; para una distribución agrupada, obténla mediante frecuencias acumuladas según la definición aplicada por el procesamiento.
+- **Desviación estándar:** usa la misma convención indicada por el proyecto o software de producción. Si no se especifica si es poblacional o muestral, calcula ambas, compáralas y registra la ambigüedad en `No verificable` en vez de aprobar sin evidencia.
+- Excluye los códigos definidos en `Excluir códigos en Prom.` y cualquier excluyente semántico confirmado.
+- Para variables `Long/Double`, verifica al menos promedio y los demás estadísticos solicitados.
+- Para marca de clase, emplea las marcas definidas en el PDT, no los límites de intervalo.
+- Compara los resultados recalculados con los publicados respetando el número de decimales mostrado. Informa el valor publicado, el recalculado, la diferencia y la base usada.
+
+### 12. Marca de clase y variables nuevas
+
+- Si el PDT define marca de clase con promedio, debe aparecer y calcularse con las marcas correctas.
+- Si aparece sin estar especificada, repórtalo.
+- Las variables `New` deben aparecer cuando correspondan al banner.
+- Las variables nuevas no definidas en el PDT son hallazgo.
+
+### 13. Consistencia lógica y estructura general
+
+- Detecta inconsistencias entre tablas, filtros y universos.
+- Las distribuciones demográficas equivalentes deben coincidir.
+- La base del grid debe coincidir con sus desagregados cuando corresponda.
+- Total menciones debe ser igual a primera mención más otras menciones, evitando doble conteo.
+- Ninguna tabla debe estar vacía.
+- El título debe incluir el indicador de pregunta cuando aplique.
 
 ---
 
-## Formato de salida (obligatorio)
+## Formato de salida obligatorio
 
-Devuelve un **único reporte en Markdown** con esta estructura:
+Devuelve un único reporte en Markdown.
 
 ### A) Resumen ejecutivo
+
+- Archivos recibidos y archivos faltantes.
+- Scripts ejecutados, resultado de ejecución y archivo de salida revisado.
 - Total de tablas revisadas.
-- Total de hallazgos por categoría (PDT, Cuestionario, LC, Etiquetas, Banners, Grid's, Neteos, Estadísticos, Promedio, Marca de clase, Variables, Consistencia lógica, Estructura).
-- Severidad: 🔴 Crítico (bloquea entrega) / 🟡 Medio / 🟢 Menor.
+- Total de hallazgos por categoría.
+- Severidad: 🔴 Crítico, 🟡 Medio o 🟢 Menor.
+- **Veredicto final:** `APROBADO`, `APROBADO CON OBSERVACIONES` o `NO APROBADO`.
 
-### B) Tabla de hallazgos
-Una fila por cada hallazgo, en este formato:
+### B) Matriz de cobertura
 
-| # | Tabla (NomTabla / N°) | Variable | Categoría | Descripción del problema | Fuente comparada | Severidad | Sugerencia |
-|---|---|---|---|---|---|---|---|
-| 1 | 0042 / C1_1_GRID | C1_1 | Grid's | Falta el atributo "Agua" que sí aparece en el cuestionario | CUESTIONARIO.md | 🔴 | Agregar atributo "Agua" al grid |
+Incluye una fila por cada tabla esperada según PDT y banner:
 
-- **Tabla**: número de tabla (0001-0081) y/o NomTabla.
-- **Categoría**: una de los 13 bloques de checks.
-- **Fuente comparada**: PDT.md / CUESTIONARIO.md / LC.md / TABLA.md (interno).
-- **Sé específico**: cita el texto exacto que está mal y el texto que debería ser.
+| Tabla / NomTabla | Variable | Esperada | Encontrada | Excel validado | Checks numéricos ejecutados | Resultado |
+|---|---|---:|---:|---:|---|---|
 
-### C) Tablas sin hallazgos
-Lista los `NomTabla` que pasaron todos los checks (para que el analista no las revise manualmente).
+Esto debe demostrar que se revisaron todas las tablas y no solo una muestra.
+
+### C) Tabla de hallazgos
+
+| # | Tabla / NomTabla | Variable | Categoría | Evidencia exacta | Valor publicado | Valor recalculado/esperado | Fuente | Severidad | Sugerencia |
+|---:|---|---|---|---|---:|---:|---|---|---|
+
+Reglas:
+
+- Una fila por hallazgo.
+- Cita el texto, celda, hoja, fila o bloque exacto.
+- Para errores numéricos, incluye fórmula, base, códigos incluidos/excluidos y diferencia.
+- No agrupes varios errores independientes en una sola fila.
+
+### D) Tablas sin hallazgos
+
+Lista los `NomTabla` que aprobaron **todos** los checks aplicables, incluidos los numéricos.
+
+### E) No verificable
+
+Detalla:
+
+- Check que no pudo ejecutarse.
+- Archivo, columna o script faltante.
+- Motivo técnico.
+- Impacto sobre el veredicto.
+
+Una tabla con checks críticos no verificables no puede incluirse en `Tablas sin hallazgos`.
 
 ---
 
-## Reglas de ejecución
+## Criterios de severidad
 
-1. **Sé exhaustivo**: revisa TODAS las tablas, no solo las primeras.
-2. **No inventes**: si un dato no se puede verificar con los archivos disponibles, indícalo en una sección "No verificable".
-3. **Cita evidencia**: cuando reportes un hallazgo, cita la línea o el texto exacto del archivo fuente.
-4. **Prioriza errores críticos**: tablas faltantes, valores que no cuadran, filtros mal aplicados, fraseos contradictorios.
-5. **Idioma**: responde en español.
-6. **No corrijas el archivo**: solo reporta los hallazgos. La corrección la hace el analista.
+- 🔴 **Crítico:** tabla faltante/extra, banner o filtro incorrecto, base equivocada, porcentajes incorrectos, suma a 100% inválida, T2B/B2B/T3B/B3B incorrecto, promedio/mediana/desviación incorrectos, excluyentes coexistiendo con respuestas válidas, script correctivo obligatorio no ejecutado.
+- 🟡 **Medio:** orden incorrecto de categorías, neto incompleto, etiqueta semánticamente incorrecta, estadístico solicitado ausente.
+- 🟢 **Menor:** formato, sangría, ortografía o presentación sin impacto numérico.
+
+## Reglas finales
+
+- Revisa todas las tablas y todos los banners entregados.
+- No apruebes por inspección visual cuando exista una validación numérica pendiente.
+- No inventes datos.
+- Si falta el Excel original, declara como no verificables porcentajes, sumas, T2B/B2B/T3B/B3B, promedio, mediana y desviación estándar, y ajusta el veredicto.
+- No corrijas silenciosamente las tablas. Reporta cada hallazgo y su evidencia.
+- Responde en español.
 
 Comienza ahora con la revisión.
