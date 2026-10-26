@@ -1,11 +1,11 @@
-## PROMPT — QA de Tablas vs. PDT (versión actualizada)
+## PROMPT — QA de Tablas vs. PDT (versión actualizada v2 — con validación de estructura de banner)
 
 ### Cómo usar
 Adjunta los siguientes archivos y luego ejecuta este prompt:
 
 1. **TABLAS_BanXX.md o TABLAS_BanXX.xlsx** — tablas finales que se deben revisar.
 2. **Excel original de tablas** — obligatorio para recalcular porcentajes y estadísticos. Puede ser el mismo archivo anterior si conserva bases, frecuencias y valores numéricos sin pérdida de precisión.
-3. **PDT.md o PDT.xlsx** — Plan de Tablas.
+3. **PDT.md o PDT.xlsx** — Plan de Tablas. **Debe incluir la hoja `Banners`** (además de `Plan de tablas`). Si el PDT es `.xlsm` y Copilot no lo lee bien, guárdalo como `.xlsx` o pega directamente el rango de la hoja `Banners` en el chat.
 4. **CUESTIONARIO.md** — cuestionario de campo.
 5. **LC.md** — Libro de Códigos, cuando existan variables `_CODED`.
 6. **Scripts auxiliares**, cuando correspondan:
@@ -29,11 +29,12 @@ No te limites a revisar estructura o presencia de elementos. Debes **recalcular 
 Antes de emitir el veredicto:
 
 1. Identifica el `BanXX` de cada archivo y filtra primero el alcance por **# Banner** del PDT.
-2. Si se adjunta `fijar_axis_mdd.py`, ejecútalo antes de revisar el orden de categorías y conserva en el reporte la evidencia de ejecución. Después, valida nuevamente el orden resultante.
-3. Si existe un código nuevo o una corrección para una categoría semánticamente excluyente, comprueba que el fix esté incorporado y ejecuta el script `_isFixed.mrs` proporcionado. Después, revisa la salida corregida.
-4. Usa el **Excel original** para validar porcentajes, agregados y estadísticos. El Markdown sirve para revisar presentación, pero no reemplaza la fuente numérica.
-5. Si un script no está adjunto o no puede ejecutarse, no declares el check como aprobado. Regístralo en **No verificable**, indicando exactamente qué archivo falta o qué error impidió la ejecución.
-6. No inventes resultados ni asumas que un fix fue aplicado solo porque se menciona en el nombre del archivo.
+2. **Valida la estructura del banner (Check 5) ANTES de revisar cualquier tabla** y repórtala primero en la sección `B0) Matriz de banner`. Un error de banner afecta a todas las tablas del archivo, por lo que debe reportarse una sola vez como hallazgo global 🔴, no tabla por tabla.
+3. Si se adjunta `fijar_axis_mdd.py`, ejecútalo antes de revisar el orden de categorías y conserva en el reporte la evidencia de ejecución. Después, valida nuevamente el orden resultante.
+4. Si existe un código nuevo o una corrección para una categoría semánticamente excluyente, comprueba que el fix esté incorporado y ejecuta el script `_isFixed.mrs` proporcionado. Después, revisa la salida corregida.
+5. Usa el **Excel original** para validar porcentajes, agregados y estadísticos. El Markdown sirve para revisar presentación, pero no reemplaza la fuente numérica.
+6. Si un script no está adjunto o no puede ejecutarse, no declares el check como aprobado. Regístralo en **No verificable**, indicando exactamente qué archivo falta o qué error impidió la ejecución.
+7. No inventes resultados ni asumas que un fix fue aplicado solo porque se menciona en el nombre del archivo.
 
 ---
 
@@ -72,12 +73,50 @@ Solo para variables `_CODED`:
 - No mostrar únicamente códigos numéricos cuando corresponde una etiqueta.
 - Mantener el idioma uniforme.
 
-### 5. Banners
+### 5. Banners (validación obligatoria ANTES de revisar las tablas)
 
-- Cortes, etiquetas y bases deben coincidir con el PDT.
-- No debe faltar ningún corte.
-- La suma o composición de los cortes debe ser compatible con la base total según se trate de cortes exclusivos o superpuestos.
-- Para celdas o productos, debe aplicarse el banner correcto.
+**Fuente:** hoja **`Banners`** del PDT (columnas: Banner, Tipo, Variable, Label Banner, Etiqueta de cada item, Códigos, Letras dif.sig.). No uses solo el campo `# Banner` del Plan de tablas: ese campo indica qué banner aplica, pero no cómo está construido. Si la hoja `Banners` no fue adjuntada o no es legible, registra todo el Check 5 en **No verificable**; el veredicto no puede ser `APROBADO`.
+
+**5.1 Extrae del PDT**, para el `BanXX` del archivo:
+- Cada fila `BANNER`: Variable, Label Banner, Etiqueta, Códigos y Letra.
+- La fila `FILTRO` (ej. Total, Urbano).
+- La fila `DIFSIG` (grupos de significancia, ej. `A, BC, DEF, GHIJK, LMN, OP, QR, STUV`).
+
+**5.2 Extrae de las tablas** el encabezado de la **primera tabla** del archivo:
+- Fila de Label Banner (ej. TOTAL, GÉNERO, EDAD, NSE…).
+- Fila de etiqueta de cada columna.
+- Fila de letras entre paréntesis `(A) (B) (C)…`.
+- Línea `ColumnProportions (5%): …`.
+- Línea `Filtro: …`, si existe.
+- Filas `Base no ponderada` y `Base Ponderada`.
+
+Confirma además que el encabezado del banner sea idéntico en todas las tablas del archivo. Si alguna tabla tiene un banner distinto, es un hallazgo.
+
+**5.3 Compara variable por variable:**
+
+a) **Número de columnas por variable.** Debe ser igual al número de filas `BANNER` de esa variable en el PDT.
+   - Si en el PDT una columna tiene **varios códigos** (ej. `1,2`, `4,5`, `2, 3`, `2,3,4,…,300`), en las tablas debe existir **una sola columna agrupada** con la etiqueta del PDT.
+   - Si en las tablas aparecen los niveles por separado (ej. `A, B, C, D, E` en lugar de `AB, C, DE`), repórtalo como 🔴 **"Agrupación de niveles no aplicada en banner"**.
+   - Lo mismo aplica al revés: si el PDT pide niveles separados y las tablas muestran una columna agrupada.
+
+b) **Etiquetas de columna.** Deben coincidir con el PDT (ignora mayúsculas, tildes y espacios al inicio o al final).
+
+c) **Orden** de las variables y de las columnas dentro de cada variable.
+
+d) **Letras.** La letra de cada columna y la **última letra** del banner deben coincidir con el PDT. Un corrimiento de letras (ej. el PDT termina en `V` y las tablas en `X`) indica columnas sobrantes o faltantes: identifica en qué variable empieza el corrimiento.
+
+e) **Significancia.** Los grupos de `ColumnProportions` deben corresponder al `DIFSIG` del PDT. Ejemplo: si el PDT dice `LMN` para NSE, en las tablas no puede aparecer `L/M/N/O/P`.
+
+f) **Filtro.** Debe coincidir con la fila `FILTRO` del PDT.
+
+g) **Variable.** Si el script o las tablas usan una variable distinta a la del PDT (ej. PDT `NSEX` y script `CUOTA_NIVEL`), compara su tabla de frecuencias con la de la variable del PDT. Si coinciden, repórtalo como 🟢 observación de trazabilidad; si difieren, como 🔴.
+
+**5.4 Bases de columnas agrupadas.** Para cada columna agrupada, busca en las tablas la frecuencia de la variable original sin agrupar (ej. `NSEX`, `CUOTA_NIVEL`, `PA`, `E5`). Suma la base no ponderada de los códigos componentes y confirma que coincida con la base no ponderada de la columna del banner. Haz lo mismo con la base ponderada (tolerancia ±1 por redondeo). Si la variable original no está tabulada, registra este punto en **No verificable**.
+
+**5.5 Suma contra el Total.** En cortes exclusivos, las columnas de una misma variable deben sumar la base Total. Si el PDT indica una variable múltiple, un filtro o un código "No precisa" excluido, la suma puede diferir: indícalo.
+⚠️ **Esta suma NO valida una agrupación**, porque los niveles sin agrupar también suman el Total (ej. A+B+C+D+E = Total). Úsala solo para detectar códigos omitidos o duplicados. Nunca apruebes el banner solo porque la suma cuadra.
+
+**5.6** Para celdas o productos, verifica que se haya aplicado el banner correcto.
 
 ### 6. Grid's
 
@@ -166,6 +205,19 @@ Devuelve un único reporte en Markdown.
 - Total de hallazgos por categoría.
 - Severidad: 🔴 Crítico, 🟡 Medio o 🟢 Menor.
 - **Veredicto final:** `APROBADO`, `APROBADO CON OBSERVACIONES` o `NO APROBADO`.
+- Indica en una línea si el **banner coincide con el PDT** (Sí / No / No verificable).
+
+### B0) Matriz de banner
+
+Una fila por cada variable del banner del PDT. Esta matriz es obligatoria aunque no haya errores.
+
+| Banner | Variable PDT | Variable tablas | Columnas PDT (n° y etiquetas) | Columnas tablas (n° y etiquetas) | Códigos PDT | Letras PDT | Letras tablas | DIFSIG PDT | Grupo sig. tablas | Base agrupada validada | Resultado |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+
+Debajo de la matriz, agrega:
+- **Filtro:** PDT vs. tablas.
+- **Última letra del banner:** PDT vs. tablas.
+- **Banner idéntico en todas las tablas:** Sí / No (cuáles difieren).
 
 ### B) Matriz de cobertura
 
@@ -207,13 +259,15 @@ Una tabla con checks críticos no verificables no puede incluirse en `Tablas sin
 
 ## Criterios de severidad
 
-- 🔴 **Crítico:** tabla faltante/extra, banner o filtro incorrecto, base equivocada, porcentajes incorrectos, suma a 100% inválida, T2B/B2B/T3B/B3B incorrecto, promedio/mediana/desviación incorrectos, excluyentes coexistiendo con respuestas válidas, script correctivo obligatorio no ejecutado.
+- 🔴 **Crítico:** tabla faltante/extra, banner o filtro incorrecto, agrupación de niveles del banner no aplicada o mal aplicada, número de columnas o letras del banner distintas al PDT, grupos de significancia distintos al DIFSIG, base equivocada, porcentajes incorrectos, suma a 100% inválida, T2B/B2B/T3B/B3B incorrecto, promedio/mediana/desviación incorrectos, excluyentes coexistiendo con respuestas válidas, script correctivo obligatorio no ejecutado.
 - 🟡 **Medio:** orden incorrecto de categorías, neto incompleto, etiqueta semánticamente incorrecta, estadístico solicitado ausente.
 - 🟢 **Menor:** formato, sangría, ortografía o presentación sin impacto numérico.
 
 ## Reglas finales
 
 - Revisa todas las tablas y todos los banners entregados.
+- Completa la **Matriz de banner (B0)** antes que cualquier otra sección. No apruebes el banner solo porque las columnas suman el Total.
+- Si encuentras otros errores además de los del banner, repórtalos todos. No te detengas en el primero.
 - No apruebes por inspección visual cuando exista una validación numérica pendiente.
 - No inventes datos.
 - Si falta el Excel original, declara como no verificables porcentajes, sumas, T2B/B2B/T3B/B3B, promedio, mediana y desviación estándar, y ajusta el veredicto.
